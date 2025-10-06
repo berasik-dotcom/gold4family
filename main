@@ -1,0 +1,80 @@
+<label for="goldShop">選擇金店:</label>
+<select id="goldShop" onchange="updateGoldPrice()">
+  <option value="450">六福珠寶 - HK$450/克</option>
+  <option value="455">周大福 - HK$455/克</option>
+  <option value="448">謝瑞麟 - HK$448/克</option>
+</select>
+
+<div id="itemsContainer"></div>
+
+<button type="button" onclick="addItem()">新增金器</button>
+<button onclick="calculateAll()">計算總市價</button>
+
+<div class="result" id="totalResult"></div>
+
+<script>
+  let items = [];
+
+  function addItem() {
+    const container = document.getElementById('itemsContainer');
+    const index = items.length;
+    items.push({weight:0, purity:1.0, fee:0});
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.id = `item-${index}`;
+    itemDiv.innerHTML = `
+      <hr>
+      <label>金器${index+1}重量(克): <input type="number" min="0" step="0.01" value="0" onchange="updateItemWeight(${index}, this.value)"></label>
+      <label>純度:
+        <select onchange="updateItemPurity(${index}, this.value)">
+          <option value="1.00">24K</option>
+          <option value="0.917">22K</option>
+          <option value="0.75">18K</option>
+        </select>
+      </label>
+      <label>加工費用(HK$): <input type="number" min="0" step="0.1" value="0" onchange="updateItemFee(${index}, this.value)"></label>
+      <div id="itemResult-${index}"></div>
+    `;
+    container.appendChild(itemDiv);
+  }
+
+  function updateItemWeight(index, val) { items[index].weight = parseFloat(val) || 0; }
+  function updateItemPurity(index, val) { items[index].purity = parseFloat(val); }
+  function updateItemFee(index, val) { items[index].fee = parseFloat(val) || 0; }
+
+  function updateGoldPrice() {
+    // 選擇不同金店，可觸發重新計算
+    calculateAll();
+  }
+
+  function calculateAll() {
+    const goldPrice = parseFloat(document.getElementById('goldShop').value);
+    let totalPureWeight = 0;
+    let totalProcessingFee = 0;
+    let totalValue = 0;
+
+    items.forEach((item, i) => {
+      const pureWeight = item.weight * item.purity;
+      const goldValue = pureWeight * goldPrice;
+      const totalItemPrice = goldValue + item.fee;
+
+      totalPureWeight += pureWeight;
+      totalProcessingFee += item.fee;
+      totalValue += totalItemPrice;
+
+      document.getElementById(`itemResult-${i}`).innerHTML = `
+        <p>純金重量: ${pureWeight.toFixed(2)} 克</p>
+        <p>金價市價 (不含加工費): HK$ ${goldValue.toFixed(2)}</p>
+        <p>加工費用: HK$ ${item.fee.toFixed(2)}</p>
+        <p>金器總價: <strong>HK$ ${totalItemPrice.toFixed(2)}</strong></p>
+      `;
+    });
+
+    document.getElementById('totalResult').innerHTML = `
+      <hr>
+      <p>純金總重量: ${totalPureWeight.toFixed(2)} 克</p>
+      <p>加工費用總計: HK$ ${totalProcessingFee.toFixed(2)}</p>
+      <p>嫁妝金飾總市價: <strong>HK$ ${totalValue.toFixed(2)}</strong></p>
+    `;
+  }
+</script>
